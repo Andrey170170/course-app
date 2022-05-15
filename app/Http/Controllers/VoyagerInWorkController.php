@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DriverCategory;
+use App\Models\ShuttleHasCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use TCG\Voyager\Database\Schema\SchemaManager;
@@ -37,7 +39,24 @@ class VoyagerInWorkController extends \TCG\Voyager\Http\Controllers\VoyagerBaseC
         }
 
         if (!$request->ajax()) {
+            DB::beginTransaction();
+            $d_categ = array();
+            $sh_categ = array();
+            $d= DriverCategory::where('drivers_d_id', $request->input('iw_d_id'))->get();
+            $sh = ShuttleHasCategory::where('shc_s_id', $request->input('iw_sh_id'))->get();
+            foreach ($d as $driv) {
+                $d_categ[] = $driv['categories_c_id'];
+            }
+            foreach ($sh as $shut) {
+                $sh_categ[] = $shut['shc_c_id'];
+            }
+            $res = collect($d_categ)->intersect(collect($sh_categ));
             $this->insertUpdateData($request, $slug, $dataType->editRows, $data);
+            if ($res->count() == 0) {
+                DB::rollBack();
+                return response()->json(['errors' => "Error"]);
+            }
+            DB::commit();
 
             event(new BreadDataUpdated($dataType, $data));
 
@@ -67,7 +86,26 @@ class VoyagerInWorkController extends \TCG\Voyager\Http\Controllers\VoyagerBaseC
         }
 
         if (!$request->has('_validate')) {
+            DB::beginTransaction();
+            $d_id = $request->input('iw_d_id');
+            $sh_id = $request->input('iw_sh_id');
+            $d = DriverCategory::where('drivers_d_id', $d_id)->get();
+            $sh = ShuttleHasCategory::where('shc_s_id', $sh_id)->get();
+            $d_categ = array();
+            $sh_categ = array();
+            foreach ($d as $driv) {
+                $d_categ[] = $driv['categories_c_id'];
+            }
+            foreach ($sh as $shut) {
+                $sh_categ[] = $shut['shc_c_id'];
+            }
+            $res = collect($d_categ)->intersect(collect($sh_categ));
             $data = $this->insertUpdateData($request, $slug, $dataType->addRows, new $dataType->model_name());
+            if ($res->count() == 0) {
+                DB::rollBack();
+                return response()->json(['errors' => "Error"]);
+            }
+            DB::commit();
 
             event(new BreadDataAdded($dataType, $data));
 

@@ -9,6 +9,6 @@ class InWork extends Model
 {
     use HasFactory;
     protected $table = 'in_work';
-    protected $primaryKey = 'iw_id';
+    protected $primaryKey = 'id';
     public $timestamps = false;
 }
