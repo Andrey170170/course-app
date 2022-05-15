@@ -54,7 +54,8 @@ class VoyagerInWorkController extends \TCG\Voyager\Http\Controllers\VoyagerBaseC
             $this->insertUpdateData($request, $slug, $dataType->editRows, $data);
             if ($res->count() == 0) {
                 DB::rollBack();
-                return response()->json(['errors' => "Error"]);
+                $error = ["iw_d_id"=> "The driver doesn't have permission to drive this shuttle"];
+                return response()->json(['errors' => $error]);
             }
             DB::commit();
 
@@ -103,7 +104,8 @@ class VoyagerInWorkController extends \TCG\Voyager\Http\Controllers\VoyagerBaseC
             $data = $this->insertUpdateData($request, $slug, $dataType->addRows, new $dataType->model_name());
             if ($res->count() == 0) {
                 DB::rollBack();
-                return response()->json(['errors' => "Error"]);
+                $error = ["iw_d_id"=> [0=>"The driver doesn't have permission to drive this shuttle"]];
+                return response()->json(['errors' => $error]);
             }
             DB::commit();
 
